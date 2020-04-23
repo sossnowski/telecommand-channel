@@ -70,8 +70,8 @@ int main() {
 
     /************************************ generate CLTU ********************************/
     unsigned int* CLTUs = generateCLTUs(encodedCodewords, &numberOfCodeword);
-    int numberOfGeneratedCLTUs = numberOfCodeword / 2;
-    if (numberOfCodeword % 2 != 0) numberOfGeneratedCLTUs++;
+    int numberOfGeneratedCLTUs = numberOfCodeword / numberOfCodewordsInCLTU;
+    if (numberOfCodeword % numberOfCodewordsInCLTU != 0) numberOfGeneratedCLTUs++;
     print_binary(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
     /*********************************** ///// ****************************************/
 
