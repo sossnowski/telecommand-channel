@@ -1,22 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "bchCoder.h"
 #include "prepareData.h"
 #include "generateCLTU.h";
 
-void displayDecoded(unsigned int** decoded, int length);
+void displayDoubleArray(unsigned int** decoded, int length);
 
 
 int main() {
+    /*********************************** init part ****************************************/
     initEncoder();
     initDecoder();
     char* msg = "1111110111111111111111111111111111111011111111111111111111101111111111111111011111111111111111111111111111111111111111111111111111111011111111111111110111111111111111111111111111111111111111111111111111111110111111111111111101111111111111111111111111111111111111111111";
     int numberOfCodeword;
+    /*********************************** ///// ****************************************/
 
+    /*********************************** prepare data ****************************************/
     //przygotuj dane w bloki odpowiedniej dlugosci (56 bitow na 64 (2 inty))
     unsigned int* preparedData = prepareData(msg, &numberOfCodeword);
+    /*********************************** ///// ****************************************/
 
+
+    /*********************************** bch coding for prepared data ****************************************/
     //jedno slowo kodowe sklada sie z 64 bitow (63 informacji + dodatkowe 0), a wiec z dwoch elementow tablicy ktora przechowuje unsigned inty.
     unsigned int** encodedCodewords =(unsigned int**) malloc(sizeof(unsigned int*) * numberOfCodeword);
     unsigned int* oneCodewordData = malloc(sizeof(unsigned int) * 2);
@@ -32,18 +37,24 @@ int main() {
     }
 
     printf("\n ---------encoded----------- \n");
-    displayDecoded(encodedCodewords, numberOfCodeword);
+    displayDoubleArray(encodedCodewords, numberOfCodeword);
+    /*********************************** ///// ****************************************/
 
-    //zmiana bitu w celu sprawdzenia poprawnosci korekcji bledu
+
+    
+    /*********************************** change bit to check correction ****************************************/
     int flag = 1;
     flag = flag << 4;
     encodedCodewords[0][0] = encodedCodewords[0][0] ^ flag;
     encodedCodewords[1][0] = encodedCodewords[1][0] ^ flag;
 
     printf("\n ---------encoded with bit error----------- \n");
-    displayDecoded(encodedCodewords, numberOfCodeword);
+    displayDoubleArray(encodedCodewords, numberOfCodeword);
+    /*********************************** ///// ****************************************/
 
-    //dekodowanie dla kazdego slowa kodowego
+    
+    
+    /************************************ decoding ********************************/
     unsigned int** decodedCodewords = (unsigned int**) malloc(sizeof(unsigned int*) * numberOfCodeword);
     for (int i = 0; i < numberOfCodeword ; i++) {
         decodedCodewords[i] = (unsigned int*) malloc(sizeof(unsigned int) * 2);
@@ -52,7 +63,9 @@ int main() {
         decodedCodewords[i][1] = decodedMsg[1];
     }
     printf("\n--------------- decoded----------- \n");
-    displayDecoded(decodedCodewords, numberOfCodeword);
+    displayDoubleArray(decodedCodewords, numberOfCodeword);
+    /*********************************** ///// ****************************************/
+
 
 
     /************************************ generate CLTU ********************************/
@@ -60,6 +73,8 @@ int main() {
     int numberOfGeneratedCLTUs = numberOfCodeword / 2;
     if (numberOfCodeword % 2 != 0) numberOfGeneratedCLTUs++;
     print_binary(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    /*********************************** ///// ****************************************/
+
 
 
 
@@ -67,7 +82,7 @@ int main() {
 }
 
 
-void displayDecoded(unsigned int** decoded, int length) {
+void displayDoubleArray(unsigned int** decoded, int length) {
     for (int i = 0; i < length; i++) {
         print_binary(decoded[i], 2);
         printf("\n");
