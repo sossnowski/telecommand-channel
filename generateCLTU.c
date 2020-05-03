@@ -1,6 +1,7 @@
 #include "generateCLTU.h"
 #include "stdbool.h"
 #include "string.h"
+#include "bchCoder.h"
 
 
 void generateBinaryStartSequence() {
@@ -56,4 +57,20 @@ unsigned int* generateCLTUs(unsigned int** data, *totalNumberOfCodeword) {
     }
 
     return allCLTUs;
+}
+
+unsigned int* decodeCLTUs(unsigned int* data, int length) {
+    int numberOfCLTUs = length / (numberOfCodewordsInCLTU * 2 + 3);
+    unsigned int* decodedCLTUs = malloc(sizeof(unsigned int ) * numberOfCLTUs * numberOfCodewordsInCLTU * 2);
+    int counter = 0;
+
+    for (int i = 0; i < numberOfCLTUs ; ++i) {
+        for (int j = 0; j <= numberOfCodewordsInCLTU * 2 ; ++j) {
+            if (j == 0) continue;
+            decodedCLTUs[counter] = data[i * numberOfBytesForCLTU + j];
+            counter++;
+        }
+    }
+
+    print_binary(decodedCLTUs, counter);
 }

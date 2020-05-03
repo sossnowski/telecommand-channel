@@ -14,6 +14,7 @@ unsigned int* binaryTailSequence;
 void generateBinaryStartSequence();
 void generateBinaryTailSequence();
 unsigned int* generateCLTUs(unsigned int** dataString, int* totalNumberOfCodeword);
+unsigned int* decodeCLTUs(unsigned int* data, int length);
 
 
 #endif

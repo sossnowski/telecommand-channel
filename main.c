@@ -69,11 +69,15 @@ int main() {
 
 
     /************************************ generate CLTU ********************************/
+    printf("generated CLTUs \n");
     unsigned int* CLTUs = generateCLTUs(encodedCodewords, &numberOfCodeword);
     int numberOfGeneratedCLTUs = numberOfCodeword / numberOfCodewordsInCLTU;
     if (numberOfCodeword % numberOfCodewordsInCLTU != 0) numberOfGeneratedCLTUs++;
     print_binary(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
     /*********************************** ///// ****************************************/
+
+    printf("\n cltus \n");
+    unsigned int* tmp = decodeCLTUs(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
 
 
 
