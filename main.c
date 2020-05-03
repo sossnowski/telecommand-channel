@@ -52,6 +52,22 @@ int main() {
     displayDoubleArray(encodedCodewords, numberOfCodeword);
     /*********************************** ///// ****************************************/
 
+    /************************************ generate CLTUs ********************************/
+    printf("generated CLTUs \n");
+    unsigned int* CLTUs = generateCLTUs(encodedCodewords, &numberOfCodeword);
+    int numberOfGeneratedCLTUs = numberOfCodeword / numberOfCodewordsInCLTU;
+    if (numberOfCodeword % numberOfCodewordsInCLTU != 0) numberOfGeneratedCLTUs++;
+    print_binary(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    /*********************************** ///// ****************************************/
+
+
+    /************************************ decode CLTUs ********************************/
+
+    printf("\n data from CLTUs \n");
+    unsigned int* decodedCLTUs = decodeCLTUs(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    print_binary(decodedCLTUs, numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2);
+    /*********************************** ///// ****************************************/
+
     
     
     /************************************ decoding ********************************/
@@ -66,18 +82,6 @@ int main() {
     displayDoubleArray(decodedCodewords, numberOfCodeword);
     /*********************************** ///// ****************************************/
 
-
-
-    /************************************ generate CLTU ********************************/
-    printf("generated CLTUs \n");
-    unsigned int* CLTUs = generateCLTUs(encodedCodewords, &numberOfCodeword);
-    int numberOfGeneratedCLTUs = numberOfCodeword / numberOfCodewordsInCLTU;
-    if (numberOfCodeword % numberOfCodewordsInCLTU != 0) numberOfGeneratedCLTUs++;
-    print_binary(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
-    /*********************************** ///// ****************************************/
-
-    printf("\n cltus \n");
-    unsigned int* tmp = decodeCLTUs(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
 
 
 

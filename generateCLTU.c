@@ -72,5 +72,5 @@ unsigned int* decodeCLTUs(unsigned int* data, int length) {
         }
     }
 
-    print_binary(decodedCLTUs, counter);
+    return decodedCLTUs;
 }
