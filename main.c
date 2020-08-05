@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include "bchCoder.h"
 #include "prepareData.h"
-#include "generateCLTU.h";
+#include "generateCLTU.h"
+#include "modulation.h"
 
 void displayDoubleArray(unsigned int** decoded, int length);
 
@@ -11,13 +12,15 @@ int main() {
     /*********************************** init part ****************************************/
     initEncoder();
     initDecoder();
-    char* msg = "1111110111111111111111111111111111111011111111111111111111101111111111111111011111111111111111111111111111111111111111111111111111111011111111111111110111111111111111111111111111111111111111111111111111111110111111111111111101111111111111111111111111111111111111111111";
+    char* msg = "111111111111111111111111111111111111111111111111111111111111111111";
     int numberOfCodeword;
     /*********************************** ///// ****************************************/
 
     /*********************************** prepare data ****************************************/
     //przygotuj dane w bloki odpowiedniej dlugosci (56 bitow na 64 (2 inty))
+    printf("********** data ************ \n");
     unsigned int* preparedData = prepareData(msg, &numberOfCodeword);
+    print_binary(preparedData, 10);
     /*********************************** ///// ****************************************/
 
 
@@ -59,6 +62,19 @@ int main() {
     if (numberOfCodeword % numberOfCodewordsInCLTU != 0) numberOfGeneratedCLTUs++;
     print_binary(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
     /*********************************** ///// ****************************************/
+
+
+    /***************************** MODULATION *****************************************************************/
+    printf("\n modulated data \n\n");
+    double complex* modulatedData = qpskModulation(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    printComplex(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+
+    unsigned int* demodulatedData = qpskDemodulation(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+    printf("\n demodulated %d \n", numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+    print_binary(demodulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    return 0;
+
+    /*****************************/// MODULATION END ///*******************************************************/
 
 
     /************************************ decode CLTUs ********************************/

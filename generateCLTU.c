@@ -3,7 +3,7 @@
 #include "string.h"
 #include "bchCoder.h"
 
-
+//generowanie binarnej sekwencji startowej ze stringu podanego w pliku generateCLTU.h
 void generateBinaryStartSequence() {
     unsigned short int binarySequence = 0;
     unsigned short int flag = 1;
@@ -16,6 +16,7 @@ void generateBinaryStartSequence() {
     binaryStartSequence = binarySequence;
 }
 
+//generowanie binarnej sekwencji koncowej ze stringu podanego w pliku generateCLTU.h
 void generateBinaryTailSequence() {
     unsigned int* binarySequence = malloc(sizeof(unsigned int) * 2);
     unsigned int flag = 1;
@@ -31,6 +32,7 @@ void generateBinaryTailSequence() {
     binaryTailSequence = binarySequence;
 }
 
+//generowanie blokow CLTU z zakodowanych wczesniej danych
 unsigned int* generateCLTUs(unsigned int** data, *totalNumberOfCodeword) {
     generateBinaryStartSequence();
     generateBinaryTailSequence();
@@ -59,6 +61,7 @@ unsigned int* generateCLTUs(unsigned int** data, *totalNumberOfCodeword) {
     return allCLTUs;
 }
 
+//odczytywanie zakodowanych danych z blokow CLTU i zebranie ich do wspolnej tablicy
 unsigned int* decodeCLTUs(unsigned int* data, int length) {
     int numberOfCLTUs = length / (numberOfCodewordsInCLTU * 2 + 3);
     unsigned int* decodedCLTUs = malloc(sizeof(unsigned int ) * numberOfCLTUs * numberOfCodewordsInCLTU * 2);
