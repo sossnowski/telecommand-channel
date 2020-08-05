@@ -33,7 +33,6 @@ double complex* qpskModulation(unsigned int* CLTUs, int length) {
 
 
 unsigned int* qpskDemodulation(double complex* modulatedData, int modulatedDatalength) {
-    printf("\ndata length %d", modulatedDatalength);
     unsigned int* demodulatedData = malloc(sizeof(unsigned int) * modulatedDatalength / 16 );
     unsigned int demodulatedByteValue = 0;
     unsigned int constelationPoint0Value = 0;
@@ -69,6 +68,24 @@ unsigned int* qpskDemodulation(double complex* modulatedData, int modulatedDatal
         constelationPoint3Value = constelationPoint3Value << 2;
     }
     return demodulatedData;
+}
+
+double complex* oversampling(double complex* modulatedData, int length) {
+    double complex* oversampledData = malloc(sizeof(double complex) * length * oversamplingLevel);
+    for (int i = 0; i < length; ++i) {
+        oversampledData[i * 2] = modulatedData[i];
+        oversampledData[i * 2 + 1] = modulatedData[i];
+    }
+    return oversampledData;
+}
+
+double complex* filtering(double complex* oversampledModulatedData, int length) {
+    double complex* modulatedDataAfterFiltering = malloc(sizeof(double complex) * length / oversamplingLevel);
+    for (int i = 0; i < length; ++i) {
+        modulatedDataAfterFiltering[i / 2] = oversampledModulatedData[i];
+        ++i;
+    }
+    return modulatedDataAfterFiltering;
 }
 
 

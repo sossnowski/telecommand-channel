@@ -8,8 +8,12 @@ static const double complex ConstelationPoint1 = 0.707 - 0.707 *I; // for 01 bin
 static const double complex ConstelationPoint2 = -0.707 + 0.707 *I; // for 10 binary value
 static const double complex ConstelationPoint3 = -0.707 - 0.707 *I; // for 11 binary value
 
+static const int oversamplingLevel = 2;
+
 double complex* qpskModulation(unsigned int* CLTUs, int length);
 unsigned int* qpskDemodulation(double complex* modulatedData, int length);
+double complex* oversampling(double complex* modulatedData, int length);
+double complex* filtering(double complex* oversampledModulatedData, int length);
 void printComplex(double complex* data, int length);
 
 #endif //BCH_MODULATION_H

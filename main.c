@@ -67,12 +67,20 @@ int main() {
     /***************************** MODULATION *****************************************************************/
     printf("\n modulated data \n\n");
     double complex* modulatedData = qpskModulation(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
-    printComplex(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
 
-    unsigned int* demodulatedData = qpskDemodulation(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
-    printf("\n demodulated %d \n", numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+    /***************************** OVERSAMPLING ***************/
+    double complex* oversampledModulatedData = oversampling(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+
+    printComplex(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
+
+    ///////^^^^^^^^^^^^^^^^^^^^^^^^^^ SIGNAL TRANSMITION ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^/////////////////
+
+    unsigned int* filteredModulatedData = filtering(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
+    printf("\n after filtering \n");
+    printComplex(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+    unsigned int* demodulatedData = qpskDemodulation(filteredModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
     print_binary(demodulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
-    return 0;
+
 
     /*****************************/// MODULATION END ///*******************************************************/
 
@@ -80,7 +88,7 @@ int main() {
     /************************************ decode CLTUs ********************************/
 
     printf("\n data from CLTUs \n");
-    unsigned int* decodedCLTUs = decodeCLTUs(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    unsigned int* decodedCLTUs = decodeCLTUs(demodulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
     print_binary(decodedCLTUs, numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2);
     /*********************************** ///// ****************************************/
 
