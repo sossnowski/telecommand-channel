@@ -65,7 +65,7 @@ int main() {
 
 
     /***************************** MODULATION *****************************************************************/
-    printf("\n modulated data \n\n");
+    printf("\nmodulated and oversampled data \n");
     double complex* modulatedData = qpskModulation(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
 
     /***************************** OVERSAMPLING ***************/
@@ -79,6 +79,7 @@ int main() {
     printf("\n after filtering \n");
     printComplex(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
     unsigned int* demodulatedData = qpskDemodulation(filteredModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+    printf("\n after demodulation\n");
     print_binary(demodulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
 
 
@@ -95,15 +96,19 @@ int main() {
     
     
     /************************************ decoding ********************************/
-    unsigned int** decodedCodewords = (unsigned int**) malloc(sizeof(unsigned int*) * numberOfCodeword);
-    for (int i = 0; i < numberOfCodeword ; i++) {
-        decodedCodewords[i] = (unsigned int*) malloc(sizeof(unsigned int) * 2);
-        unsigned int* decodedMsg = bchDecoder(encodedCodewords[i]);
-        decodedCodewords[i][0] = decodedMsg[0];
-        decodedCodewords[i][1] = decodedMsg[1];
+    int lengthOfdecodedData = numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2;
+    unsigned int* decodedCodewords = malloc(sizeof(unsigned int) * numberOfCodeword * 2);
+    unsigned int* oneCodewordToDecode = malloc(sizeof(unsigned int) * 2);
+    for (int i = 0; i < lengthOfdecodedData ; i++) {
+        oneCodewordToDecode[0] = decodedCLTUs[i];
+        oneCodewordToDecode[1] = decodedCLTUs[i + 1];
+        unsigned int* decodedMsg = bchDecoder(oneCodewordToDecode);
+        decodedCodewords[i] = decodedMsg[0];
+        decodedCodewords[i+1] = decodedMsg[1];
+        ++i;
     }
     printf("\n--------------- decoded----------- \n");
-    displayDoubleArray(decodedCodewords, numberOfCodeword);
+    print_binary(decodedCodewords, numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2);
     /*********************************** ///// ****************************************/
 
 
