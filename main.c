@@ -20,7 +20,7 @@ int main() {
     //przygotuj dane w bloki odpowiedniej dlugosci (56 bitow na 64 (2 inty))
     printf("********** data ************ \n");
     unsigned int* preparedData = prepareData(msg, &numberOfCodeword);
-    print_binary(preparedData, 10);
+    print_binary(preparedData, numberOfCodeword);
     /*********************************** ///// ****************************************/
 
 
