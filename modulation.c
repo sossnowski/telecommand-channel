@@ -72,9 +72,11 @@ unsigned int* qpskDemodulation(double complex* modulatedData, int modulatedDatal
 
 double complex* oversampling(double complex* modulatedData, int length) {
     double complex* oversampledData = malloc(sizeof(double complex) * length * oversamplingLevel);
-    for (int i = 0; i < length; ++i) {
-        oversampledData[i * 2] = modulatedData[i];
-        oversampledData[i * 2 + 1] = modulatedData[i];
+    for(int i = 0; i < length; ++i) {
+        oversampledData[i * oversamplingLevel] = modulatedData[i];
+        for (int j = 1; j < oversamplingLevel; ++j) {
+            oversampledData[i * oversamplingLevel + j] = ConstelationPoint0;
+        }
     }
     return oversampledData;
 }
@@ -82,8 +84,8 @@ double complex* oversampling(double complex* modulatedData, int length) {
 double complex* filtering(double complex* oversampledModulatedData, int length) {
     double complex* modulatedDataAfterFiltering = malloc(sizeof(double complex) * length / oversamplingLevel);
     for (int i = 0; i < length; ++i) {
-        modulatedDataAfterFiltering[i / 2] = oversampledModulatedData[i];
-        ++i;
+        modulatedDataAfterFiltering[i / oversamplingLevel] = oversampledModulatedData[i];
+        i += oversamplingLevel - 1;
     }
     return modulatedDataAfterFiltering;
 }

@@ -4,6 +4,8 @@
 #include "prepareData.h"
 #include "generateCLTU.h"
 #include "modulation.h"
+#include "randomizer.h"
+#include <string.h>
 
 void displayDoubleArray(unsigned int** decoded, int length);
 
@@ -16,10 +18,14 @@ int main() {
     int numberOfCodeword;
     /*********************************** ///// ****************************************/
 
+
+    char* randomizedData = randomizer(msg);
+    int dataLength = strlen(randomizedData);
+
     /*********************************** prepare data ****************************************/
     //przygotuj dane w bloki odpowiedniej dlugosci (56 bitow na 64 (2 inty))
     printf("********** data ************ \n");
-    unsigned int* preparedData = prepareData(msg, &numberOfCodeword);
+    unsigned int* preparedData = prepareData(randomizedData, &numberOfCodeword);
     print_binary(preparedData, numberOfCodeword);
     /*********************************** ///// ****************************************/
 
@@ -44,7 +50,7 @@ int main() {
     /*********************************** ///// ****************************************/
 
 
-    
+
     /*********************************** change bit to check correction ****************************************/
     int flag = 1;
     flag = flag << 4;
@@ -93,8 +99,8 @@ int main() {
     print_binary(decodedCLTUs, numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2);
     /*********************************** ///// ****************************************/
 
-    
-    
+
+
     /************************************ decoding ********************************/
     int lengthOfdecodedData = numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2;
     unsigned int* decodedCodewords = malloc(sizeof(unsigned int) * numberOfCodeword * 2);
@@ -109,10 +115,36 @@ int main() {
     }
     printf("\n--------------- decoded----------- \n");
     print_binary(decodedCodewords, numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2);
+    char* stringDataFromBinary = fromBinaryToString(decodedCodewords, dataLength);
+    printf("\n ddd %s ", stringDataFromBinary);
+    char* derandomizedData = randomizer(stringDataFromBinary);
+    printf("\n koniec %s", derandomizedData);
     /*********************************** ///// ****************************************/
 
-
-
+//    int data[8];
+//    for (int i = 0; i < 8; ++i) {
+//        data[i] = 1;
+//    }
+//    int result = 0;
+//    int tmp = 0;
+//    for (int i = 0; i < 256; ++i) {
+//        result = data[0] + data[1];
+//        result %= 2;
+//        result += data[2];
+//        result %= 2;
+//        result += data[3];
+//        result %=2;
+//        result += data[4];
+//        result %=2;
+//        result += data[6];
+//        result %=2;
+//
+//        printf("%d", data[0]);
+//        for (int z = 0; z < 7; ++z) {
+//            data[z] = data[z + 1];
+//        }
+//        data[7] = result;
+//    }
 
 
     return 0;
