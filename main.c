@@ -5,6 +5,7 @@
 #include "generateCLTU.h"
 #include "modulation.h"
 #include "randomizer.h"
+#include "dataFlowVariant.h"
 #include <string.h>
 
 void displayDoubleArray(unsigned int** decoded, int length);
@@ -14,9 +15,11 @@ int main() {
     /*********************************** init part ****************************************/
     initEncoder();
     initDecoder();
-    char* msg = "111111111111111111111111111111111111111111111111111111111111111111";
+    char* msg = "111111111111111111111111111111111111111000111111111111111111111111";
     int numberOfCodeword;
     /*********************************** ///// ****************************************/
+    char* tmp = normalToSPL(msg);
+    printf("\n %s \n", tmp);
 
 
     char* randomizedData = randomizer(msg);

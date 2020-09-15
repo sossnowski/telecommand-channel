@@ -3,4 +3,4 @@ project(bch C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(bch main.c bchCoder.c prepareData.c generateCLTU.c modulation.c dataFlowVariant.h randomizer.h randomizer.c)
+add_executable(bch main.c bchCoder.c prepareData.c generateCLTU.c modulation.c dataFlowVariant.h dataFlowVariant.c randomizer.h randomizer.c)
