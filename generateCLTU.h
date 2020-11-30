@@ -2,7 +2,7 @@
 #define GENERATE_CLTU
 
 
-#define numberOfCodewordsInCLTU 2
+#define numberOfCodewordsInCLTU 1
 #define numberOfBytesForCLTU ((numberOfCodewordsInCLTU * 2) + 3)
 #define startSequence "1110101110010000"
 #define tailSequence "1100010111000101110001011100010111000101110001011100010101111001"

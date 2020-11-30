@@ -15,21 +15,24 @@ int main() {
     /*********************************** init part ****************************************/
     initEncoder();
     initDecoder();
-    char* msg = "111111111111111111111111111111111111111000111111111111111111111111";
+    char* msg = "1111111111111111111111111111111111111111111111111111";
     int numberOfCodeword;
     /*********************************** ///// ****************************************/
-    char* tmp = normalToSPL(msg);
-    printf("\n %s \n", tmp);
+    // char* tmp = normalToSPL(msg);
+    //printf("\n %s \n", tmp);
 
 
     char* randomizedData = randomizer(msg);
     int dataLength = strlen(randomizedData);
 
+    printf("randomized data \n");
+    printf("%s \n", randomizedData);
+
     /*********************************** prepare data ****************************************/
     //przygotuj dane w bloki odpowiedniej dlugosci (56 bitow na 64 (2 inty))
-    printf("********** data ************ \n");
+    printf("********** prepared data ************ \n");
     unsigned int* preparedData = prepareData(randomizedData, &numberOfCodeword);
-    print_binary(preparedData, numberOfCodeword);
+    print_binary(preparedData, numberOfCodeword * 2);
     /*********************************** ///// ****************************************/
 
 
@@ -56,9 +59,10 @@ int main() {
 
     /*********************************** change bit to check correction ****************************************/
     int flag = 1;
-    flag = flag << 4;
+    flag = flag << 2;
     encodedCodewords[0][0] = encodedCodewords[0][0] ^ flag;
-    encodedCodewords[1][0] = encodedCodewords[1][0] ^ flag;
+    flag = flag << 2;
+//    encodedCodewords[1][0] = encodedCodewords[1][0] ^ flag;
 
     printf("\n ---------encoded with bit error----------- \n");
     displayDoubleArray(encodedCodewords, numberOfCodeword);
@@ -74,20 +78,23 @@ int main() {
 
 
     /***************************** MODULATION *****************************************************************/
-    printf("\nmodulated and oversampled data \n");
-    double complex* modulatedData = qpskModulation(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    printf("\n modulated data \n");
+//    double complex* modulatedData = qpskModulation(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    double complex* modulatedData = analogPhaseModulation(CLTUs, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    printComplex(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 32);
+    printf("\n nowa \n");
 
     /***************************** OVERSAMPLING ***************/
-    double complex* oversampledModulatedData = oversampling(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+//    double complex* oversampledModulatedData = oversampling(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
 
-    printComplex(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
+//    printComplex(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
 
     ///////^^^^^^^^^^^^^^^^^^^^^^^^^^ SIGNAL TRANSMITION ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^/////////////////
 
-    unsigned int* filteredModulatedData = filtering(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
-    printf("\n after filtering \n");
-    printComplex(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
-    unsigned int* demodulatedData = qpskDemodulation(filteredModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+//    unsigned int* filteredModulatedData = filtering(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
+//    printf("\n after filtering \n");
+//    printComplex(filteredModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+    unsigned int* demodulatedData = analogPhaseDemodulation(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
     printf("\n after demodulation\n");
     print_binary(demodulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
 
@@ -119,9 +126,8 @@ int main() {
     printf("\n--------------- decoded----------- \n");
     print_binary(decodedCodewords, numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2);
     char* stringDataFromBinary = fromBinaryToString(decodedCodewords, dataLength);
-    printf("\n ddd %s ", stringDataFromBinary);
     char* derandomizedData = randomizer(stringDataFromBinary);
-    printf("\n koniec %s", derandomizedData);
+    printf("\n", derandomizedData);
     /*********************************** ///// ****************************************/
 
 //    int data[8];
@@ -129,7 +135,6 @@ int main() {
 //        data[i] = 1;
 //    }
 //    int result = 0;
-//    int tmp = 0;
 //    for (int i = 0; i < 256; ++i) {
 //        result = data[0] + data[1];
 //        result %= 2;

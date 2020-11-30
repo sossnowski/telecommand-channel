@@ -2,6 +2,7 @@
 #include "stdbool.h"
 #include "string.h"
 #include "bchCoder.h"
+#include "stdlib.h"
 
 //generowanie binarnej sekwencji startowej ze stringu podanego w pliku generateCLTU.h
 void generateBinaryStartSequence() {
@@ -45,7 +46,7 @@ unsigned int* generateCLTUs(unsigned int** data, *totalNumberOfCodeword) {
     for (int j = 0; j < numberOfCLTUNeeded; ++j ) {
         for (int i = 1; i < numberOfIntsNeededForData; ++i) {
             if (counter == *totalNumberOfCodeword) break;
-            allCLTUs[i + (j * (numberOfBytesForCLTU))] = data[counter][0]; //set data bit inside cltu
+            allCLTUs[i + (j * (numberOfBytesForCLTU))] = data[counter][0];
             allCLTUs[i + 1 + (j * (numberOfBytesForCLTU))] = data[counter][1];
             counter++;
             i++;

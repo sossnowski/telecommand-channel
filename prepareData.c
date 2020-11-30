@@ -1,6 +1,7 @@
 #include "bchCoder.h"
 #include "stdbool.h"
 #include "string.h"
+#include "stdlib.h"
 
 /**
  * Funkcja dzieli wejsciowy string danych na bloki o dlugosc 64 bitow oraz umieszcza w nich 56 kolejnych bitow informacyjnych
@@ -36,7 +37,6 @@ unsigned int* prepareData(char* dataString, int* numberOfCodeword) {
         flag = flag << 1;
         bitIndex++;
     }
-    int tmp = sizeof(dataBits) / sizeof(dataBits[0]);
     *numberOfCodeword = numberOfInts / 2;
     return dataBits;
 }

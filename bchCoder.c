@@ -1,6 +1,7 @@
 #include "bchCoder.h"
 #include "stdbool.h"
 #include "stdio.h"
+#include "stdlib.h"
 
 /**
  *
@@ -50,7 +51,7 @@ unsigned int* bchDecoder(unsigned int* encodedMsg) {
     bool error = false;
     unsigned int flag = 1;
     unsigned int messageIndex = 0;
-    short int numberOfColumnWithError; //number of column in parity check matrix which is equal to syndrome
+    short int numberOfColumnWithError;
 
 
     for (int i = 0; i < bchData.polynomialDegree ; i++) {
@@ -61,7 +62,7 @@ unsigned int* bchDecoder(unsigned int* encodedMsg) {
             if (checkMatrix[i][j] == '1' && ( encodedMsg[messageIndex] & flag )) syndromeVector[i]++;
             flag = flag << 1;
         }
-        if (syndromeVector[i] % 2) error = true; // if syndrome vector on i position is equal 1 modulo 2 it means that there is error
+        if (syndromeVector[i] % 2) error = true; // jezeli syndrom jest rozny od zera (modulo 2) na i-tej pozycji oznacza to ze wystapil blad
     }
 
     if (error) {
@@ -115,7 +116,7 @@ unsigned int* bchDecoder(unsigned int* encodedMsg) {
 }
 
 /**
- * Function create generation matrix using bchData object
+ * Funkcja tworzy macierz generacji wykorzystując dane zdefiniowane w funkcji inicjalizującej koder
  *
  * @return wskaznik do macierzy generacji
  */
