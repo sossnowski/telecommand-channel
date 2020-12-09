@@ -1,6 +1,7 @@
 #include "modulation.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 
 /**
@@ -113,39 +114,43 @@ int countNumberOfSamplesPerPeriod() {
     return subcarrierFreq / bitrate * 2;
 }
 
-double complex* getSamplesValues(int numberOfSamplesPerPeriod) {
-    const double complex* samplesValues;
-    if (numberOfSamplesPerPeriod == 4) {
-        samplesValues = FourSamples;
-    } else if (numberOfSamplesPerPeriod == 8 ) {
-        samplesValues = EightSamples;
-    } else if (numberOfSamplesPerPeriod == 16 ) {
-        samplesValues = SixteenPoints;
-    } else {
-        samplesValues = ThirtyTwoPoints;
+double* getSamplesValues(int numberOfSamplesPerPeriod) {
+    double* samplesAmplitude = malloc(sizeof(double) * numberOfSamplesPerPeriod);
+    double x = 360 / numberOfSamplesPerPeriod;
+    double val = PI / 180;
+    for (int i = 0; i < numberOfSamplesPerPeriod; ++i) {
+        samplesAmplitude[i] = sin(i * x * val);
     }
 
-    return samplesValues;
+    return samplesAmplitude;
+}
+
+double complex computeComplex(double amplitude, double angle) {
+    const double real = cos(angle) * amplitude;
+    const double imaginary = sin(angle) * amplitude;
+
+    return real + I * imaginary;
 }
 
 double complex* analogPhaseModulation(unsigned int* CLTUs, int length) {
     const int numberOfSamplesPerPeriod = countNumberOfSamplesPerPeriod();
-    double complex* samplesValues = getSamplesValues(numberOfSamplesPerPeriod);
+    double* samplesValues = getSamplesValues(numberOfSamplesPerPeriod);
     const int outputDataLength = length * numberOfSamplesPerPeriod * 32;
     double complex* outputData = malloc(sizeof(double complex) * outputDataLength);
     int outputDataCounter = 0;
     unsigned int flag = 1;
+    double deviation = angleDeviation;
     for (int i = 0; i < length; ++i) {
         for (int j = 0; j < 32; ++j) {
             if ((CLTUs[i] & flag) == 0) {
                 for (int sampleNumber = 0; sampleNumber < numberOfSamplesPerPeriod; ++sampleNumber) {
-                    outputData[outputDataCounter] = samplesValues[sampleNumber] * -1;
-                    outputDataCounter++;
+                    outputData[outputDataCounter++] = computeComplex(samplesValues[sampleNumber], deviation) * -1;
+                    deviation *= -1;
                 }
             } else {
                 for (int sampleNumber = 0; sampleNumber < numberOfSamplesPerPeriod; ++sampleNumber) {
-                    outputData[outputDataCounter] = samplesValues[sampleNumber];
-                    outputDataCounter++;
+                    outputData[outputDataCounter++] = computeComplex(samplesValues[sampleNumber], deviation);
+                    deviation *= -1;
                 }
             }
             flag = flag << 1;
@@ -158,7 +163,7 @@ double complex* analogPhaseModulation(unsigned int* CLTUs, int length) {
 
 unsigned int* analogPhaseDemodulation(double complex* modulatedData, int modulatedDataBytesNumber) {
     const int numberOfSamplesPerPeriod = countNumberOfSamplesPerPeriod();
-    double complex* samplesValues = getSamplesValues(numberOfSamplesPerPeriod);
+    double* samplesValues = getSamplesValues(numberOfSamplesPerPeriod);
     unsigned int* demodulatedData = malloc(sizeof(unsigned int) * modulatedDataBytesNumber);
     int counter = 0;
     unsigned int demodulatedByteValue = 0;
@@ -166,13 +171,28 @@ unsigned int* analogPhaseDemodulation(double complex* modulatedData, int modulat
     unsigned int bit1Value = 1;
     int demodulatedDataCounter = 0;
     int modulatedDataLength = modulatedDataBytesNumber * 32 * numberOfSamplesPerPeriod;
+    int sameSignNumbers = 0;
+    int oppositeNumbers = 0;
+    double deviation = angleDeviation;
 
-    for (int i = 0; i < modulatedDataLength; i+= numberOfSamplesPerPeriod) {
-        if (modulatedData[i] == samplesValues[0]) {
+    for (int i = 0; i < modulatedDataLength; i += numberOfSamplesPerPeriod) {
+        for (int j = 0; j < numberOfSamplesPerPeriod; ++j) {
+            double complex referenceSampleValue = computeComplex(samplesValues[j], deviation);
+            int modulatedDataIndex = i + j;
+            if (creal(modulatedData[modulatedDataIndex]) * creal(referenceSampleValue) >= 0 && cimag(modulatedData[modulatedDataIndex]) * cimag(referenceSampleValue) >= 0){
+                sameSignNumbers++;
+            } else if(creal(modulatedData[modulatedDataIndex]) * creal(referenceSampleValue) < 0 && cimag(modulatedData[modulatedDataIndex]) * cimag(referenceSampleValue) < 0) {
+                oppositeNumbers++;
+            }
+            deviation *= -1;
+        }
+        if (sameSignNumbers > oppositeNumbers) {
             demodulatedByteValue = demodulatedByteValue | bit1Value;
         } else {
             demodulatedByteValue = demodulatedByteValue | bit0Value;
         }
+        sameSignNumbers = 0;
+        oppositeNumbers = 0;
 
         bit1Value = bit1Value << 1;
         counter++;
