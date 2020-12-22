@@ -111,7 +111,10 @@ double complex* filtering(double complex* oversampledModulatedData, int length) 
 }
 
 int countNumberOfSamplesPerPeriod() {
-    return subcarrierFreq / bitrate * 2;
+	float numberOfSamples = (subcarrierFreq + modulatedSignalFactor * bitrate) * 2;
+	int numberOfSamplesInt = numberOfSamples;
+	if (numberOfSamples > numberOfSamplesInt) numberOfSamplesInt++;
+    return numberOfSamplesInt;
 }
 
 double* getSamplesValues(int numberOfSamplesPerPeriod) {

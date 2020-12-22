@@ -11,6 +11,7 @@ static const double complex ConstelationPoint2 = -0.707 + 0.707 *I; // dla warto
 static const double complex ConstelationPoint3 = -0.707 - 0.707 *I; // dla wartości binarnej 11
 
 static const int oversamplingLevel = 2;
+static const int modulatedSignalFactor = 2;
 static const int bitrate = 4; // kbits (1, 2, 4)
 static const int subcarrierFreq = 8; //kHz ( 8 lub 16)
 static const double angleDeviation = PI / 180 * 90;
