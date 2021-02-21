@@ -152,6 +152,14 @@ double complex* shiftModulatedData(double complex* modulatedData, double offset,
     }
 
     return shiftedData;
+
+
+    // druga FUNKCJA DO obliczania ilosci probek na okres
+int countNumberOfSamplesPerPeriod() {
+	float numberOfSamples = (subcarrierFreq + modulatedSignalFactor * bitrate) * 2;
+	int numberOfSamplesInt = numberOfSamples;
+	if (numberOfSamples > numberOfSamplesInt) numberOfSamplesInt++;
+    return numberOfSamplesInt;
 }
 
 
