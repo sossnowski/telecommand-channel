@@ -15,7 +15,7 @@ int main() {
     /*********************************** init part ****************************************/
     initEncoder();
     initDecoder();
-    char* msg = "1111111111111111111111111111111111111111111111111111";
+    char* msg = "111101111111111111111111111111111111111111111111111111111110100101010101010100101010101001111100000";
     int numberOfCodeword;
     /*********************************** ///// ****************************************/
     // char* tmp = normalToSPL(msg);
@@ -85,16 +85,20 @@ int main() {
     printf("\n nowa \n");
 
     /***************************** OVERSAMPLING ***************/
-//    double complex* oversampledModulatedData = oversampling(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+   double complex* oversampledModulatedData = oversampling(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 32 * 4);
+   double complex* tmp = filtering(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
+    //printComplex(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 32 * 2);
+    //printf("\n nowa \n");
 
 //    printComplex(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
 
     ///////^^^^^^^^^^^^^^^^^^^^^^^^^^ SIGNAL TRANSMITION ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^/////////////////
 
-//    unsigned int* filteredModulatedData = filtering(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
+//    double complex* filteredModulatedData = removeOversampledValues(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16 * oversamplingLevel);
 //    printf("\n after filtering \n");
 //    printComplex(filteredModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 16);
-    unsigned int* demodulatedData = analogPhaseDemodulation(modulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
+    unsigned int* demodulatedData = analogPhaseDemodulation(oversampledModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU, numberOfGeneratedCLTUs * numberOfBytesForCLTU *32 *4 );
+//    unsigned int* demodulatedData = qpskDemodulation(filteredModulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU * 32 /2);
     printf("\n after demodulation\n");
     print_binary(demodulatedData, numberOfGeneratedCLTUs * numberOfBytesForCLTU);
 
@@ -127,7 +131,7 @@ int main() {
     print_binary(decodedCodewords, numberOfGeneratedCLTUs * numberOfCodewordsInCLTU * 2);
     char* stringDataFromBinary = fromBinaryToString(decodedCodewords, dataLength);
     char* derandomizedData = randomizer(stringDataFromBinary);
-    printf("\n", derandomizedData);
+    printf("\n, %s", derandomizedData);
     /*********************************** ///// ****************************************/
 
 //    int data[8];

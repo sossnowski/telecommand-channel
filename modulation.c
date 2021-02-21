@@ -16,6 +16,11 @@ double complex* qpskModulation(unsigned int* CLTUs, int length) {
     unsigned int secondFlag = 1;
     int complexCounter = 0;
     secondFlag = secondFlag << 1;
+    //
+    const double real = cos(angle);
+    const double imaginary = sin(angle);
+    double complex offsetComplex = real + I * imaginary;
+    //
     for (int i = 0; i < length ; ++i) {
         for (int j = 0; j < 16; ++j) {
             if ((CLTUs[i] & firstFlag) == 0 && (CLTUs[i] & secondFlag) == 0) {
@@ -27,6 +32,10 @@ double complex* qpskModulation(unsigned int* CLTUs, int length) {
             } else {
                 modulatedData[complexCounter] = ConstelationPoint3;
             }
+            // zmiana probek jako symulacja zaklocen w kanale transmisji
+            //modulatedData[complexCounter] /= 2;
+            modulatedData[complexCounter] *= offsetComplex;
+
             firstFlag = firstFlag << 2;
             secondFlag = secondFlag << 2;
             complexCounter++;
@@ -44,75 +53,107 @@ double complex* qpskModulation(unsigned int* CLTUs, int length) {
  * @param CLTUs zmidulowany ciąg danych
  * @return zdemodulowany ciąg danych
  */
-unsigned int* qpskDemodulation(double complex* modulatedData, int modulatedDatalength) {
-    unsigned int* demodulatedData = malloc(sizeof(unsigned int) * modulatedDatalength / 16 );
-    unsigned int demodulatedByteValue = 0;
+unsigned int* qpskDemodulation(double complex* data, int length) {
+    const double real = cos(angle);
+    const double imaginary = sin(angle * -1);
+    double complex offsetComplex = real + I * imaginary;
+    float numberOfInts =(float) length / 32;
+    int parsedNumberOfInts = numberOfInts;
+    if (numberOfInts > parsedNumberOfInts) parsedNumberOfInts += 1;
+    unsigned int* demodulatedData = malloc(sizeof(complex double) * parsedNumberOfInts );
+    // shifting values
+    for (int i = 0; i < length; ++i) {
+        //printf("%f %f | ", creal(data[i]), cimag(data[i]));
+        data[i] = data[i] * offsetComplex;
+        //printf("%f %f || ", creal(data[i]), cimag(data[i]));
+    }
+
+    double sum = 0;
+    for (int i = 0; i < numberOfSamplesToComputeAmplitudeFactor; ++i) {
+        sum += 1 / sqrt(creal(data[i]) * creal(data[i]) + cimag(data[i]) * cimag(data[i]));
+    }
+    double amplitudeFactor = sum / numberOfSamplesToComputeAmplitudeFactor;
+    //printf("\n %f \n", amplitudeFactor);
+
+    unsigned int demodulatedValue = 0;
+    int counter = 0;
     unsigned int constelationPoint0Value = 0; // bitowo 00
     unsigned int constelationPoint1Value = 1; // bitowo 01
     unsigned int constelationPoint2Value = 2; // bitowo 10
     unsigned int constelationPoint3Value = 3; // bitowo 11
-    int demodulatedByteCounter = 0;
+    // scale amplitude to 1
+    for (int i = 0; i < length; ++i) {
+        data[i] *= amplitudeFactor;
 
-
-    for (int i = 0; i <= modulatedDatalength; ++i) {
-        if ((i % 16) == 0 && i != 0) {
-            demodulatedData[demodulatedByteCounter++] = demodulatedByteValue;
-            demodulatedByteValue = 0;
+        //printf("%f %f || \n", creal(data[i]), cimag(data[i]));
+        if (i != 0 && (i % 16) == 0) {
+            demodulatedData[counter++] = demodulatedValue;
+            demodulatedValue = 0;
             constelationPoint0Value = 0;
             constelationPoint1Value = 1;
             constelationPoint2Value = 2;
             constelationPoint3Value = 3;
-            if (i == modulatedDatalength) break;
+        }
+        // pierwsza cwiartka ukladu
+        if (creal(data[i]) > 0 && cimag(data[i]) > 0) {
+            demodulatedValue = demodulatedValue | constelationPoint0Value;
+        } else if (creal(data[i]) > 0 && cimag(data[i]) < 0) {
+            demodulatedValue = demodulatedValue | constelationPoint1Value;
+        } else if (creal(data[i]) < 0 && cimag(data[i]) > 0) {
+            demodulatedValue = demodulatedValue | constelationPoint2Value;
+        } else if (creal(data[i]) < 0 && cimag(data[i]) < 0) {
+            demodulatedValue = demodulatedValue | constelationPoint3Value;
         }
 
-        if (modulatedData[i] == ConstelationPoint0) {
-            demodulatedByteValue = demodulatedByteValue | constelationPoint0Value;
-        } else if (modulatedData[i] == ConstelationPoint1) {
-            demodulatedByteValue = demodulatedByteValue | constelationPoint1Value;
-        } else if (modulatedData[i] == ConstelationPoint2) {
-            demodulatedByteValue = demodulatedByteValue | constelationPoint2Value;
-        } else {
-            demodulatedByteValue = demodulatedByteValue | constelationPoint3Value;
-        }
         constelationPoint0Value = constelationPoint0Value << 2;
         constelationPoint1Value = constelationPoint1Value << 2;
         constelationPoint2Value = constelationPoint2Value << 2;
         constelationPoint3Value = constelationPoint3Value << 2;
     }
+    demodulatedData[counter] = demodulatedValue;
+
     return demodulatedData;
-}
 
-/**
- * Funkcja przeprowadz nadpróbkowanie danych
- *
- * @param modulatedData ciąg danych wejściowych
- * @param length długość wejściowego ciągu danych
- *
- * @return oversampledData nadpróbkowany ciąg danych
- */
-double complex* oversampling(double complex* modulatedData, int length) {
-    double complex* oversampledData = malloc(sizeof(double complex) * length * oversamplingLevel);
-    for(int i = 0; i < length; ++i) {
-        oversampledData[i * oversamplingLevel] = modulatedData[i];
-        for (int j = 1; j < oversamplingLevel; ++j) {
-            oversampledData[i * oversamplingLevel + j] = ConstelationPoint0;
-        }
-    }
-    return oversampledData;
-}
-
-double complex* filtering(double complex* oversampledModulatedData, int length) {
-    double complex* modulatedDataAfterFiltering = malloc(sizeof(double complex) * length / oversamplingLevel);
-    for (int i = 0; i < length; ++i) {
-        modulatedDataAfterFiltering[i / oversamplingLevel] = oversampledModulatedData[i];
-        i += oversamplingLevel - 1;
-    }
-    return modulatedDataAfterFiltering;
 }
 
 int countNumberOfSamplesPerPeriod() {
-    return subcarrierFreq / bitrate * 2;
+    float numberOfSamples = (float) (subcarrierFreq + modulatedSignalFactor * bitrate) * 2 / subcarrierFreq;
+    int numberOfSamplesInt = (int) numberOfSamples;
+    if (numberOfSamples > numberOfSamplesInt) numberOfSamplesInt++;
+    return numberOfSamplesInt;
 }
+
+double countPhaseOffset(double complex* modulatedData, int length) {
+    double sum = 0;
+    for (int i = 0; i < length; ++i) {
+        sum += cimag(modulatedData[i]);
+    }
+    double phaseOffset = sum / length;
+
+    return phaseOffset;
+}
+
+double complex computeComplexSignalValue(double amplitude, double angle) {
+    const double real = cos(2* PI + angle * amplitude);
+    const double imaginary = sin(2* PI + angle * amplitude);
+
+    return real + I * imaginary;
+}
+
+
+double complex* shiftModulatedData(double complex* modulatedData, double offset, int length) {
+    double complex* shiftedData = malloc(sizeof(double complex) * length);
+    const double real = cos(offset) * 1;
+    const double imaginary = sin(offset) * 1;
+    double complex offsetComplex = real + I * imaginary;
+
+    for (int i = 0; i < length; ++i) {
+        shiftedData[i] = modulatedData[i] * offsetComplex;
+    }
+
+    return shiftedData;
+}
+
 
 double* getSamplesValues(int numberOfSamplesPerPeriod) {
     double* samplesAmplitude = malloc(sizeof(double) * numberOfSamplesPerPeriod);
@@ -125,12 +166,57 @@ double* getSamplesValues(int numberOfSamplesPerPeriod) {
     return samplesAmplitude;
 }
 
-double complex computeComplex(double amplitude, double angle) {
-    const double real = cos(angle) * amplitude;
-    const double imaginary = sin(angle) * amplitude;
-
-    return real + I * imaginary;
+double complex* oversampling(double complex* modulatedData, int length) {
+    double complex* oversampledData = malloc(sizeof(double complex) * length * oversamplingLevel);
+    for(int i = 0; i < length; ++i) {
+        oversampledData[i * oversamplingLevel] = modulatedData[i];
+        for (int j = 1; j < oversamplingLevel; ++j) {
+            oversampledData[i * oversamplingLevel + j] = 0 + 0*I;
+        }
+    }
+    return oversampledData;
 }
+
+double complex* filtering(double complex* data, int length) {
+    double complex* filteredData = malloc(sizeof(double complex) * length * oversamplingLevel);
+    int counter = 0;
+    double realValue = 0;
+    double imagValue = 0;
+    for (int i = 0; i < numberOfFiltersValues; ++i) {
+        for (int j = 0; j <= i; ++j) {
+            realValue += filterValues[j] * creal(data[j]);
+            imagValue += filterValues[j] * cimag(data[j]);
+        }
+        filteredData[counter++] = realValue + imagValue * I;
+        realValue = 0;
+        imagValue = 0;
+    }
+
+    for (int i = numberOfFiltersValues; i < length * oversamplingLevel; ++i) {
+        for (int j = 0; j < numberOfFiltersValues; ++j) {
+            double value =(double) 1 / 2;
+            realValue += filterValues[j] * creal(data[i + j]);
+            imagValue += filterValues[j] * cimag(data[i + j]);
+        }
+
+        filteredData[counter++] = realValue + imagValue * I;
+        realValue = 0;
+        imagValue = 0;
+    }
+
+    return filteredData;
+}
+
+double complex* removeOversampledValues(double complex * data, int length) {
+    double complex* filteredData = malloc(sizeof(double complex) * length);
+    int counter = 0;
+    for (int i = 0; i < length * oversamplingLevel; i += oversamplingLevel) {
+        filteredData[counter++] = data[i];
+    }
+
+    return filteredData;
+}
+
 
 double complex* analogPhaseModulation(unsigned int* CLTUs, int length) {
     const int numberOfSamplesPerPeriod = countNumberOfSamplesPerPeriod();
@@ -140,16 +226,22 @@ double complex* analogPhaseModulation(unsigned int* CLTUs, int length) {
     int outputDataCounter = 0;
     unsigned int flag = 1;
     double deviation = angleDeviation;
+    double complex tmpOffset = cos(PI / 180 * 20) + sin(PI / 180 * 20) * I;
     for (int i = 0; i < length; ++i) {
         for (int j = 0; j < 32; ++j) {
+
             if ((CLTUs[i] & flag) == 0) {
                 for (int sampleNumber = 0; sampleNumber < numberOfSamplesPerPeriod; ++sampleNumber) {
-                    outputData[outputDataCounter++] = computeComplex(samplesValues[sampleNumber], deviation) * -1;
+                    double tmp = samplesValues[sampleNumber];
+                    double complex tmp1 = computeComplexSignalValue(samplesValues[sampleNumber], deviation) * -1;
+                    outputData[outputDataCounter++] = tmp1;// computeComplexSignalValue(samplesValues[sampleNumber], deviation) * -1;
                     deviation *= -1;
                 }
             } else {
                 for (int sampleNumber = 0; sampleNumber < numberOfSamplesPerPeriod; ++sampleNumber) {
-                    outputData[outputDataCounter++] = computeComplex(samplesValues[sampleNumber], deviation);
+                    double tmp = samplesValues[sampleNumber];
+                    double complex tmp1 = computeComplexSignalValue(samplesValues[sampleNumber], deviation);
+                    outputData[outputDataCounter++] = tmp1;// computeComplexSignalValue(samplesValues[sampleNumber], deviation);
                     deviation *= -1;
                 }
             }
@@ -161,38 +253,40 @@ double complex* analogPhaseModulation(unsigned int* CLTUs, int length) {
     return outputData;
 }
 
-unsigned int* analogPhaseDemodulation(double complex* modulatedData, int modulatedDataBytesNumber) {
+unsigned int* analogPhaseDemodulation(double complex* modulatedData, int modulatedDataBytesNumber, int numberOfComplexNumbers) {
     const int numberOfSamplesPerPeriod = countNumberOfSamplesPerPeriod();
+    double phaseOffset = countPhaseOffset(modulatedData, numberOfSamplesPerPeriod * numberOfSymbolToCalculatePhaseOffset);
+    double complex* shiftedData = shiftModulatedData(modulatedData, phaseOffset, numberOfComplexNumbers * 2);
+
+    double complex* filteredData = removeOversampledValues(filtering(shiftedData, numberOfComplexNumbers), numberOfComplexNumbers);
+
     double* samplesValues = getSamplesValues(numberOfSamplesPerPeriod);
     unsigned int* demodulatedData = malloc(sizeof(unsigned int) * modulatedDataBytesNumber);
+
     int counter = 0;
     unsigned int demodulatedByteValue = 0;
     unsigned int bit0Value = 0;
     unsigned int bit1Value = 1;
     int demodulatedDataCounter = 0;
-    int modulatedDataLength = modulatedDataBytesNumber * 32 * numberOfSamplesPerPeriod;
-    int sameSignNumbers = 0;
-    int oppositeNumbers = 0;
+    double periodAmplitudeSum = 0;
     double deviation = angleDeviation;
 
-    for (int i = 0; i < modulatedDataLength; i += numberOfSamplesPerPeriod) {
+    for (int i = 0; i < numberOfComplexNumbers; i += numberOfSamplesPerPeriod) {
         for (int j = 0; j < numberOfSamplesPerPeriod; ++j) {
-            double complex referenceSampleValue = computeComplex(samplesValues[j], deviation);
             int modulatedDataIndex = i + j;
-            if (creal(modulatedData[modulatedDataIndex]) * creal(referenceSampleValue) >= 0 && cimag(modulatedData[modulatedDataIndex]) * cimag(referenceSampleValue) >= 0){
-                sameSignNumbers++;
-            } else if(creal(modulatedData[modulatedDataIndex]) * creal(referenceSampleValue) < 0 && cimag(modulatedData[modulatedDataIndex]) * cimag(referenceSampleValue) < 0) {
-                oppositeNumbers++;
-            }
+
+            double demodulatedValue;
+            demodulatedValue = cimag(filteredData[modulatedDataIndex]) / sin(deviation);
+            periodAmplitudeSum += demodulatedValue * samplesValues[j];
             deviation *= -1;
         }
-        if (sameSignNumbers > oppositeNumbers) {
+
+        if (periodAmplitudeSum / numberOfSamplesPerPeriod > 0) {
             demodulatedByteValue = demodulatedByteValue | bit1Value;
         } else {
             demodulatedByteValue = demodulatedByteValue | bit0Value;
         }
-        sameSignNumbers = 0;
-        oppositeNumbers = 0;
+        periodAmplitudeSum = 0;
 
         bit1Value = bit1Value << 1;
         counter++;
@@ -205,6 +299,7 @@ unsigned int* analogPhaseDemodulation(double complex* modulatedData, int modulat
         }
 
     }
+    demodulatedData[demodulatedDataCounter] = demodulatedByteValue;
 
     return demodulatedData;
 }
